@@ -14,12 +14,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract project from ZIP
-        run: |
-          unzip uellow_vendor_app.zip
-          cp -r uellow_vendor_app/* .
-          ls -la
-
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -33,27 +27,44 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Create fresh Flutter project
+        run: |
+          flutter create --org com.uellow --project-name uellow_vendor /tmp/fresh_app
+
+      - name: Copy source files only (no android folder)
+        run: |
+          cp -r lib /tmp/fresh_app/
+          cp -r assets /tmp/fresh_app/
+          cp pubspec.yaml /tmp/fresh_app/
+
       - name: Ensure fonts exist
         run: |
-          mkdir -p assets/fonts
+          mkdir -p /tmp/fresh_app/assets/fonts
           python3 -c "
           import os, shutil
+          base = '/tmp/fresh_app/assets/fonts'
           for f in ['Cairo-Regular.ttf','Cairo-Medium.ttf','Cairo-Bold.ttf']:
-              p = f'assets/fonts/{f}'
+              p = f'{base}/{f}'
               if not os.path.exists(p):
                   src = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
-                  shutil.copy(src, p) if os.path.exists(src) else open(p,'wb').write(bytes(12))
+                  shutil.copy(src, p) if os.path.exists(src) else open(p,'wb').write(bytes(16))
           "
 
       - name: Flutter pub get
+        working-directory: /tmp/fresh_app
         run: flutter pub get
 
+      - name: Flutter analyze
+        working-directory: /tmp/fresh_app
+        run: flutter analyze --no-fatal-infos || true
+
       - name: Build Release APK
+        working-directory: /tmp/fresh_app
         run: flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: uellow-vendor-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: /tmp/fresh_app/build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
