@@ -16,15 +16,13 @@ class AppTheme {
       surface: AppColors.surface,
     ),
     scaffoldBackgroundColor: AppColors.background,
-    fontFamily: 'Cairo',
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.surface,
       foregroundColor: AppColors.textPrimary,
       elevation: 0,
       centerTitle: false,
       titleTextStyle: TextStyle(
-        fontFamily: 'Cairo',
-        fontSize: 18,
+            fontSize: 18,
         fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
       ),
@@ -45,8 +43,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         padding: const EdgeInsets.symmetric(vertical: 14),
         textStyle: const TextStyle(
-          fontFamily: 'Cairo',
-          fontSize: 15,
+                fontSize: 15,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -90,15 +87,13 @@ class AppTheme {
       surface: AppColors.surfaceDark,
     ),
     scaffoldBackgroundColor: AppColors.backgroundDark,
-    fontFamily: 'Cairo',
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.surfaceDark,
       foregroundColor: AppColors.textPrimaryDark,
       elevation: 0,
       centerTitle: false,
       titleTextStyle: TextStyle(
-        fontFamily: 'Cairo',
-        fontSize: 18,
+            fontSize: 18,
         fontWeight: FontWeight.w500,
         color: AppColors.textPrimaryDark,
       ),
@@ -119,8 +114,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         padding: const EdgeInsets.symmetric(vertical: 14),
         textStyle: const TextStyle(
-          fontFamily: 'Cairo',
-          fontSize: 15,
+                fontSize: 15,
           fontWeight: FontWeight.w500,
         ),
       ),

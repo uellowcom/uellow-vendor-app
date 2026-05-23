@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/api/api_result.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -30,7 +31,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _passCtrl.text,
     );
     if (!mounted) return;
-    if (result is ApiSuccess) {
+    // Check success by type
+    if (result is! ApiError) {
       context.go('/dashboard');
     }
   }
@@ -38,7 +40,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
-    final t = Localizations.of<dynamic>(context, dynamic);
 
     return Scaffold(
       body: Column(
@@ -102,14 +103,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'Sign in to your account',
                     style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
 
-                  // Email field
                   TextField(
                     controller: _loginCtrl,
                     keyboardType: TextInputType.emailAddress,
@@ -121,7 +121,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Password field
                   TextField(
                     controller: _passCtrl,
                     obscureText: _obscure,
@@ -141,7 +140,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Error
                   if (auth.error != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
@@ -156,7 +154,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                   const SizedBox(height: 8),
 
-                  // Sign in button
                   SizedBox(
                     height: 52,
                     child: ElevatedButton(
@@ -175,7 +172,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Forgot password
                   TextButton(
                     onPressed: () {},
                     child: const Text(

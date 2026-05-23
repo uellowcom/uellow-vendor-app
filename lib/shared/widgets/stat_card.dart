@@ -47,12 +47,15 @@ class StatCard extends StatelessWidget {
                 color: iconBgColor,
                 borderRadius: BorderRadius.circular(9),
               ),
-              child: Icon(icon, size: 16, color: iconBgColor.withOpacity(3)),
+              child: Icon(icon, size: 16, color: AppColors.primary),
             ),
             const SizedBox(height: 10),
             Text(
               value,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 2),
