@@ -17,24 +17,29 @@ class ApiClient {
         baseUrl: AppConstants.baseUrl,
         connectTimeout: Duration(seconds: AppConstants.connectTimeout),
         receiveTimeout: Duration(seconds: AppConstants.receiveTimeout),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        // مهم: السماح بإرسال cookies مع كل طلب (Odoo session)
+        extra: {'withCredentials': true},
       ),
     );
 
-    // Auth interceptor
+    // Cookie manager للـ Odoo session
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final token = await _storage.read(key: AppConstants.tokenKey);
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
+          // أضف session_id إذا موجود
+          final uid = await _storage.read(key: AppConstants.tokenKey);
+          if (uid != null) {
+            options.headers['X-Vendor-UID'] = uid;
           }
           return handler.next(options);
         },
-        onError: (error, handler) {
+        onError: (error, handler) async {
           if (error.response?.statusCode == 401) {
-            // Token expired — clear and redirect to login
-            _storage.delete(key: AppConstants.tokenKey);
+            await _storage.delete(key: AppConstants.tokenKey);
           }
           return handler.next(error);
         },
@@ -42,5 +47,10 @@ class ApiClient {
     );
 
     return dio;
+  }
+
+  // Reset client (after logout)
+  static void reset() {
+    _dio = null;
   }
 }

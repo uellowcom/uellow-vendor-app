@@ -9,22 +9,26 @@ class AuthState {
   final bool isAuthenticated;
   final bool isLoading;
   final String? error;
-  final String? token;
+  final int? uid;
 
   const AuthState({
     this.isAuthenticated = false,
     this.isLoading = false,
     this.error,
-    this.token,
+    this.uid,
   });
 
-  AuthState copyWith({bool? isAuthenticated, bool? isLoading, String? error, String? token}) =>
-      AuthState(
-        isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-        isLoading: isLoading ?? this.isLoading,
-        error: error,
-        token: token ?? this.token,
-      );
+  AuthState copyWith({
+    bool? isAuthenticated,
+    bool? isLoading,
+    String? error,
+    int? uid,
+  }) => AuthState(
+    isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+    isLoading: isLoading ?? this.isLoading,
+    error: error,
+    uid: uid ?? this.uid,
+  );
 }
 
 class AuthNotifier extends Notifier<AuthState> {
@@ -34,35 +38,65 @@ class AuthNotifier extends Notifier<AuthState> {
   AuthState build() => const AuthState();
 
   Future<void> checkAuth() async {
-    final token = await _storage.read(key: AppConstants.tokenKey);
-    if (token != null) {
-      state = state.copyWith(isAuthenticated: true, token: token);
+    final uid = await _storage.read(key: AppConstants.tokenKey);
+    if (uid != null) {
+      state = state.copyWith(isAuthenticated: true, uid: int.tryParse(uid));
     }
   }
 
   Future<ApiResult<void>> login(String login, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
+      // استخدام Odoo JSON-RPC endpoint الرسمي
       final response = await ApiClient.instance.post(
         AppConstants.loginEndpoint,
-        data: {'login': login, 'password': password},
+        data: {
+          'jsonrpc': '2.0',
+          'method': 'call',
+          'params': {
+            'db': 'odoo',
+            'login': login,
+            'password': password,
+          },
+        },
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
       );
-      final token = response.data['token'] as String?;
-      if (token == null) {
+
+      final result = response.data['result'];
+      if (result == null || result['uid'] == null) {
+        final error = response.data['error'];
         state = state.copyWith(isLoading: false, error: 'invalid_credentials');
         return const ApiError('invalid_credentials');
       }
-      await _storage.write(key: AppConstants.tokenKey, value: token);
-      state = state.copyWith(isAuthenticated: true, isLoading: false, token: token);
+
+      final uid = result['uid'] as int;
+      // حفظ الـ session عبر cookies (Dio يحفظها تلقائياً)
+      await _storage.write(key: AppConstants.tokenKey, value: uid.toString());
+
+      state = state.copyWith(isAuthenticated: true, isLoading: false, uid: uid);
       return const ApiSuccess(null);
+
     } on DioException catch (e) {
-      final msg = e.response?.statusCode == 401 ? 'invalid_credentials' : 'network_error';
+      final msg = e.response?.statusCode == 401
+          ? 'invalid_credentials'
+          : 'network_error';
       state = state.copyWith(isLoading: false, error: msg);
       return ApiError(msg, statusCode: e.response?.statusCode);
     }
   }
 
   Future<void> logout() async {
+    // Odoo logout
+    try {
+      await ApiClient.instance.post(
+        '/web/session/destroy',
+        data: {'jsonrpc': '2.0', 'method': 'call', 'params': {}},
+      );
+    } catch (_) {}
     await _storage.delete(key: AppConstants.tokenKey);
     state = const AuthState();
   }
