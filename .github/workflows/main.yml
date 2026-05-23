@@ -31,11 +31,21 @@ jobs:
         run: |
           flutter create --org com.uellow --project-name uellow_vendor /tmp/fresh_app
 
-      - name: Copy source files only (no android folder)
+      - name: Copy source files
         run: |
           cp -r lib /tmp/fresh_app/
           cp -r assets /tmp/fresh_app/
           cp pubspec.yaml /tmp/fresh_app/
+
+      - name: Fix API endpoints
+        run: |
+          sed -i "s|/api/vendor/login|/uellow/vendor/login|g" /tmp/fresh_app/lib/core/constants/app_constants.dart
+          sed -i "s|/api/vendor/dashboard|/uellow/vendor/dashboard|g" /tmp/fresh_app/lib/core/constants/app_constants.dart
+          sed -i "s|/api/vendor/orders|/uellow/vendor/orders|g" /tmp/fresh_app/lib/core/constants/app_constants.dart
+          sed -i "s|/api/vendor/stock|/uellow/vendor/stock|g" /tmp/fresh_app/lib/core/constants/app_constants.dart
+          sed -i "s|/api/vendor/wallet|/uellow/vendor/wallet|g" /tmp/fresh_app/lib/core/constants/app_constants.dart
+          echo "Endpoints:"
+          grep "Endpoint" /tmp/fresh_app/lib/core/constants/app_constants.dart
 
       - name: Ensure fonts exist
         run: |
